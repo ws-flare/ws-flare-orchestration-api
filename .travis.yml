@@ -1,0 +1,17 @@
+language: node_js
+node_js:
+  - '8'
+services:
+  - docker
+install:
+  - yarn --ignore-engines
+  - docker pull rabbitmq
+script:
+  - yarn test
+  - yarn build
+  - docker build -t wsflare/ws-flare-orchestration-api:$TRAVIS_BUILD_NUMBER .
+deploy:
+  - provider: script
+    script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" && docker push wsflare/ws-flare-orchestration-api
+    on:
+      branch: master
