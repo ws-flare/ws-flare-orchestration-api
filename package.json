@@ -1,7 +1,7 @@
 {
-  "name": "ws-flare-graphql",
+  "name": "ws-flare-orchestration-api",
   "version": "1.0.0",
-  "description": "ws-flare-graphql",
+  "description": "ws-flare-orchestration-api",
   "keywords": [
     "loopback-application",
     "loopback"
