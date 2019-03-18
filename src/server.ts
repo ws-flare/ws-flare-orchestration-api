@@ -1,8 +1,9 @@
-import {CoreBindings, Application} from '@loopback/core';
-import {Context, inject} from '@loopback/context';
-import * as express from 'express';
-import {Logger} from 'winston';
+import { CoreBindings, Application } from '@loopback/core';
+import { Context, inject } from '@loopback/context';
+import { Logger } from 'winston';
 import * as http from 'http';
+import { Connection, ConsumeMessage } from 'amqplib';
+import { NodesService } from './services/Nodes.service';
 
 export class Server extends Context implements Server {
     private _listening: boolean = false;
@@ -11,8 +12,14 @@ export class Server extends Context implements Server {
     @inject('logger')
     public logger: Logger;
 
-    @inject('server.port')
-    public port: number;
+    @inject('amqp.conn')
+    public amqpConn: Connection;
+
+    @inject('channel.job.create')
+    public createJobQueue: string;
+
+    @inject('services.nodes')
+    public nodesService: NodesService;
 
     constructor(@inject(CoreBindings.APPLICATION_INSTANCE) public app?: Application) {
         super(app);
@@ -23,9 +30,15 @@ export class Server extends Context implements Server {
     }
 
     async start(): Promise<void> {
-        const expressServer = express();
+        const createJobChannel = await this.amqpConn.createChannel();
 
-        expressServer.get('/', (req, res) => res.send({uptime: process.uptime()}));
+        await createJobChannel.assertQueue(this.createJobQueue);
+
+        await createJobChannel.consume(this.createJobQueue, async (message: ConsumeMessage) => {
+            const parsed = JSON.parse((message).content.toString());
+
+            await this.nodesService.runTest(parsed.job, parsed.task);
+        }, {noAck: true});
     }
 
     async stop(): Promise<void> {

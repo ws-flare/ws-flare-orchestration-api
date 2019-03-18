@@ -56,7 +56,9 @@
     "@loopback/service-proxy": "^1.0.10",
     "amqplib": "^0.5.3",
     "express": "^4.16.4",
+    "kubernetes-client": "^6.11.0",
     "superagent": "^4.1.0",
+    "uuid": "^3.3.2",
     "winston": "^3.2.1"
   },
   "devDependencies": {
@@ -72,6 +74,7 @@
     "@types/nock": "^9.3.1",
     "@types/node": "^10.11.2",
     "@types/superagent": "^4.1.1",
+    "@types/uuid": "^3.4.4",
     "async": "^2.6.2",
     "chai": "^4.2.0",
     "cross-env": "^5.2.0",

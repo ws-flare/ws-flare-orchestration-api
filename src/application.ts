@@ -1,7 +1,10 @@
+import { Client1_10, config } from 'kubernetes-client';
 import { Application, ApplicationConfig } from '@loopback/core';
 import { createLogger, transports } from 'winston';
 import { connect } from 'amqplib';
 import { Server } from './server';
+import { NodesService } from './services/Nodes.service';
+import { KubernetesService } from './services/Kubernetes.service';
 
 export class GraphqlApplication extends Application {
 
@@ -21,13 +24,13 @@ export class GraphqlApplication extends Application {
         // Logger
         this.bind('logger').to(logger);
 
-        // Jwt
-        this.bind('jwt.secret').to(options.jwt.secret);
-
-        // Server Options
-        this.bind('server.port').to(this.options.port);
+        // Config
+        this.bind('config.nodes.connectionLimitPerNode').to(1000);
+        this.bind('config.kubernetes.testImage').to(options.kubernetes.testImage)
 
         // Services
+        this.bind('services.nodes').toClass(NodesService);
+        this.bind('services.kubernetes').toClass(KubernetesService);
 
         // Remote APIS
         this.bind('api.user').to(options.apis.userApi);
@@ -48,6 +51,9 @@ export class GraphqlApplication extends Application {
 
         // Channels
         this.bind('channel.job.create').to('job.create');
+
+        // Kubernetes
+        this.bind('kubernetes.client').to(new Client1_10({config: config.getInCluster()}));
 
     }
 
