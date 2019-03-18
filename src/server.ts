@@ -1,25 +1,19 @@
-import { CoreBindings, Application } from '@loopback/core';
+import { Application, CoreBindings } from '@loopback/core';
 import { Context, inject } from '@loopback/context';
-import { Logger } from 'winston';
-import * as http from 'http';
 import { Connection, ConsumeMessage } from 'amqplib';
 import { NodesService } from './services/Nodes.service';
 
 export class Server extends Context implements Server {
     private _listening: boolean = false;
-    private server: http.Server;
-
-    @inject('logger')
-    public logger: Logger;
 
     @inject('amqp.conn')
-    public amqpConn: Connection;
+    private amqpConn: Connection;
 
-    @inject('channel.job.create')
-    public createJobQueue: string;
+    @inject('queue.job.create')
+    private createJobQueue: string;
 
     @inject('services.nodes')
-    public nodesService: NodesService;
+    private nodesService: NodesService;
 
     constructor(@inject(CoreBindings.APPLICATION_INSTANCE) public app?: Application) {
         super(app);
@@ -42,6 +36,6 @@ export class Server extends Context implements Server {
     }
 
     async stop(): Promise<void> {
-        await this.server.close();
+        await this.amqpConn.close();
     }
 }

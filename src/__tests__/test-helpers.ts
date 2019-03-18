@@ -1,5 +1,7 @@
 import { connect, Connection } from 'amqplib';
 import { retry } from 'async';
+import * as mock from 'mock-fs';
+import { readFileSync } from 'fs-extra';
 
 let {Docker} = require('node-docker-api');
 let getRandomPort = require('random-port-as-promised');
@@ -64,4 +66,32 @@ export async function getAMQPConn(port: number): Promise<Connection> {
     process.env.AMQP_PWD = AMQP_PWD;
 
     return connect({hostname: AMQP_URL, port, username: AMQP_USER, password: AMQP_PWD});
+}
+
+export function setupK8sConfig() {
+    mock({
+        '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt': 'my-ca',
+        '/var/run/secrets/kubernetes.io/serviceaccount/token': 'my-token',
+        '/var/run/secrets/kubernetes.io/serviceaccount/namespace': 'my-namespace',
+        'node_modules/kubernetes-client/lib/specs/swagger-1.10.json.gz': readFileSync('./node_modules/kubernetes-client/lib/specs/swagger-1.10.json.gz'),
+        'node_modules/winston/lib/winston/transports/console.js': readFileSync('./node_modules/winston/lib/winston/transports/console.js'),
+        'node_modules/readable-stream/lib': {
+            '_stream_duplex.js': readFileSync('./node_modules/readable-stream/lib/_stream_duplex.js'),
+            '_stream_readable.js': readFileSync('./node_modules/readable-stream/lib/_stream_readable.js')
+        },
+        'node_modules/for-own': {
+            'index.js': readFileSync('./node_modules/for-own/index.js')
+        },
+        'node_modules/shallow-clone': {
+            'index.js': readFileSync('./node_modules/shallow-clone/index.js'),
+            'utils.js': readFileSync('./node_modules/shallow-clone/utils.js'),
+        },
+        'node_modules/shallow-clone/node_modules': {},
+        'node_modules/shallow-clone/node_modules/lazy-cache': {
+            'index.js': readFileSync('./node_modules/shallow-clone/node_modules/lazy-cache/index.js')
+        },
+        'node_modules/shallow-clone/node_modules/kind-of': {
+            'index.js': readFileSync('./node_modules/shallow-clone/node_modules/kind-of/index.js')
+        }
+    });
 }

@@ -1,9 +1,9 @@
 import { ApplicationConfig } from '@loopback/core';
-import { GraphqlApplication } from './application';
+import { OrchestrationApplication } from './application';
 
 const {PORT, USER_API, PROJECTS_API, JOBS_API, AMQP_URL, AMQP_PORT, AMQP_USER, AMQP_PWD, TEST_IMAGE} = process.env;
 
-export async function main(options: ApplicationConfig = {}): Promise<GraphqlApplication> {
+export async function main(options: ApplicationConfig = {}): Promise<OrchestrationApplication> {
     options.port = options.port || PORT;
     options.apis = {
         userApi: USER_API,
@@ -20,7 +20,7 @@ export async function main(options: ApplicationConfig = {}): Promise<GraphqlAppl
         testImage: TEST_IMAGE
     };
 
-    const app = new GraphqlApplication(options);
+    const app = new OrchestrationApplication(options);
 
     await app.start();
 

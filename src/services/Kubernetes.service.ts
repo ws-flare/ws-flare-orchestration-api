@@ -1,15 +1,16 @@
 import * as uuid from 'uuid/v4';
 import { inject } from '@loopback/core';
+import { retry } from 'async';
 import { Task } from '../models/Task.model';
-import ApiRoot = KubernetesClient.ApiRoot;
 import { Job } from '../models/Job.model';
+import ApiRoot = KubernetesClient.ApiRoot;
 
 export class KubernetesService {
 
     @inject('config.kubernetes.testImage')
     private testImage: string;
 
-    @inject('apis.jobs')
+    @inject('api.jobs')
     private jobsApi: string;
 
     @inject('kubernetes.client')
@@ -88,6 +89,28 @@ export class KubernetesService {
                     ]
                 }
             }
+        });
+
+        await this.waitForPodToStart(`ws-flare-test-client-${id}`);
+    }
+
+    private async waitForPodToStart(podName: string) {
+        await new Promise((resolve) => {
+            retry({times: 100, interval: 2000}, done => {
+
+                console.log('Waiting for pod to start');
+
+                this.kubernetesClient.api.v1.namespaces('default').pod(podName).status.get()
+                    .then((response: any) => {
+                        console.log(response.body);
+                        const complete = response.body.status.conditions.filter((condition: { type: string }) => {
+                            return condition.type === 'Complete'
+                        }).length > 0;
+
+                        done(complete ? null : new Error('Test pod not yet ready'));
+                    });
+
+            }, () => resolve());
         });
     }
 }
