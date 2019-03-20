@@ -54,35 +54,35 @@ export class KubernetesService {
                             env: [
                                 {
                                     name: "TASK_ID",
-                                    value: task.id
+                                    value: `${task.id}`
                                 },
                                 {
                                     name: "JOB_ID",
-                                    value: job.id
+                                    value: `${job.id}`
                                 },
                                 {
                                     name: "JOBS_API",
-                                    value: this.jobsApi
+                                    value: `${this.jobsApi}`
                                 },
                                 {
                                     name: "TOTAL_SIMULATED_USERS",
-                                    value: task.totalSimulatedUsers
+                                    value: `${task.totalSimulatedUsers}`
                                 },
                                 {
                                     name: "AMQP_URL",
-                                    value: this.amqpUrl
+                                    value: `${this.amqpUrl}`
                                 },
                                 {
                                     name: "AMQP_PORT",
-                                    value: this.amqpPort
+                                    value: `${this.amqpPort}`
                                 },
                                 {
                                     name: "AMQP_USER",
-                                    value: this.amqpUser
+                                    value: `${this.amqpUser}`
                                 },
                                 {
                                     name: "AMQP_PWD",
-                                    value: this.amqpPwd
+                                    value: `${this.amqpPwd}`
                                 }
                             ]
                         }
