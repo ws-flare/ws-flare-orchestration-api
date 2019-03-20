@@ -84,7 +84,12 @@ export class KubernetesService {
                                     name: "AMQP_PWD",
                                     value: `${this.amqpPwd}`
                                 }
-                            ]
+                            ],
+                            resources: {
+                                requests: {
+                                    cpu: '10Mi'
+                                }
+                            }
                         }
                     ]
                 }
