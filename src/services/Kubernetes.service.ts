@@ -102,10 +102,8 @@ export class KubernetesService {
 
                 this.kubernetesClient.api.v1.namespaces('default').pod(podName).status.get()
                     .then((response: any) => {
-                        console.log(response.body);
-                        const complete = response.body.status.conditions.filter((condition: { type: string }) => {
-                            return condition.type === 'Complete'
-                        }).length > 0;
+                        console.log(response.body.status);
+                        const complete = response.body.status.phase === 'Running';
 
                         done(complete ? null : new Error('Test pod not yet ready'));
                     });

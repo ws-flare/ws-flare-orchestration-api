@@ -51,7 +51,7 @@ describe('Orchestration', () => {
         nock('http://localhost:9000')
             .get(/\/api\/v1\/namespaces\/default\/pods\/.*\/status/)
             .thrice()
-            .reply(200, {status: {conditions: [{type: 'Complete'}]}});
+            .reply(200, {status: {phase: 'Running'}});
 
         await createJobChannel.sendToQueue(createJobQueue, new Buffer((JSON.stringify({
             taskId: 'abc123',
