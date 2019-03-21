@@ -65,8 +65,16 @@ export class KubernetesService {
                                     value: `${this.jobsApi}`
                                 },
                                 {
+                                    name: "URI",
+                                    value: `${task.uri}`
+                                },
+                                {
                                     name: "TOTAL_SIMULATED_USERS",
                                     value: `${task.totalSimulatedUsers}`
+                                },
+                                {
+                                    name: 'RUN_TIME',
+                                    value: `${task.runTime}`
                                 },
                                 {
                                     name: "AMQP_URL",
