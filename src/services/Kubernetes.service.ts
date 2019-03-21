@@ -83,6 +83,10 @@ export class KubernetesService {
                                 {
                                     name: "AMQP_PWD",
                                     value: `${this.amqpPwd}`
+                                },
+                                {
+                                    name: "NODE_NAME",
+                                    value: `ws-flare-test-client-${id}`
                                 }
                             ],
                             resources: {
