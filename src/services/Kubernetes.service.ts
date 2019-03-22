@@ -1,9 +1,9 @@
 import * as uuid from 'uuid/v4';
 import { inject } from '@loopback/core';
-import { retry } from 'async';
 import { Task } from '../models/Task.model';
 import { Job } from '../models/Job.model';
 import ApiRoot = KubernetesClient.ApiRoot;
+import { Connection, ConsumeMessage } from 'amqplib';
 
 export class KubernetesService {
 
@@ -17,19 +17,27 @@ export class KubernetesService {
     private kubernetesClient: ApiRoot;
 
     @inject('amqp.url')
-    amqpUrl: string;
+    private amqpUrl: string;
 
     @inject('amqp.port')
-    amqpPort: string;
+    private amqpPort: string;
 
     @inject('amqp.user')
-    amqpUser: string;
+    private amqpUser: string;
 
     @inject('amqp.pwd')
-    amqpPwd: string;
+    private amqpPwd: string;
+
+    @inject('amqp.conn')
+    private amqpConn: Connection;
+
+    @inject('queue.node.ready')
+    private nodeReadyQueue: string;
 
     async startTestPod(job: Job, task: Task, totalSimulatedUsers: number) {
-        const id = uuid();
+
+        // To enable testing we need this environment variable set in the test
+        const id = process.env.NODE_ID || uuid();
 
         await this.kubernetesClient.api.v1.namespaces('default').pod.post({
             body: {
@@ -59,6 +67,10 @@ export class KubernetesService {
                                 {
                                     name: "JOB_ID",
                                     value: `${job.id}`
+                                },
+                                {
+                                    name: 'NODE_ID',
+                                    value: `${id}`
                                 },
                                 {
                                     name: "JOBS_API",
@@ -108,24 +120,19 @@ export class KubernetesService {
             }
         });
 
-        await this.waitForPodToStart(`ws-flare-test-client-${id}`);
+        await this.waitForPodToStart(id);
     }
 
-    private async waitForPodToStart(podName: string) {
+    private async waitForPodToStart(nodeId: string) {
+        const nodeReadyChannel = await this.amqpConn.createChannel();
+        const queue = `${this.nodeReadyQueue}.${nodeId}`;
+
+        await nodeReadyChannel.assertQueue(queue);
+
         await new Promise((resolve) => {
-            retry({times: 100, interval: 2000}, done => {
-
-                console.log('Waiting for pod to start');
-
-                this.kubernetesClient.api.v1.namespaces('default').pod(podName).status.get()
-                    .then((response: any) => {
-                        console.log(response.body.status);
-                        const complete = response.body.status.phase === 'Running';
-
-                        done(complete ? null : new Error('Test pod not yet ready'));
-                    });
-
-            }, () => resolve());
+            nodeReadyChannel.consume(queue, () => {
+                nodeReadyChannel.close().then(() => resolve());
+            }, {noAck: true});
         });
     }
 }

@@ -41,6 +41,7 @@ export class OrchestrationApplication extends Application {
 
         // Queues
         this.bind('queue.job.create').to('job.create');
+        this.bind('queue.node.ready').to('node.ready');
 
         // Exchanges
         this.bind('exchange.job.start').to('job.start');

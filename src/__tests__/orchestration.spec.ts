@@ -9,12 +9,14 @@ describe('Orchestration', () => {
 
     const createJobQueue = 'job.create';
     const startTestExchange = 'job.start.job1';
+    const nodeReadyQueue = 'node.ready.my-test-node1';
 
     let app: OrchestrationApplication;
     let container: Container;
     let port: number;
     let createJobChannel: Channel;
     let startTestChannel: Channel;
+    let nodeReadyChannel: Channel;
     let qok: any;
 
     beforeEach(async () => {
@@ -22,12 +24,17 @@ describe('Orchestration', () => {
 
         setupK8sConfig();
 
+        process.env.NODE_ID = 'my-test-node1';
+
         app = await main({amqp: {port}});
 
         const conn = await getAMQPConn(port);
         createJobChannel = await conn.createChannel();
         startTestChannel = await conn.createChannel();
+        nodeReadyChannel = await conn.createChannel();
+
         await createJobChannel.assertQueue(createJobQueue);
+        await nodeReadyChannel.assertQueue(nodeReadyQueue);
 
         qok = await startTestChannel.assertExchange(startTestExchange, 'fanout', {durable: false});
 
@@ -58,11 +65,6 @@ describe('Orchestration', () => {
             .intercept(/\/api\/v1\/namespaces\/default\/pods/, 'POST')
             .reply(200, {status: {}});
 
-        nock('http://localhost:9000')
-            .get(/\/api\/v1\/namespaces\/default\/pods\/.*\/status/)
-            .thrice()
-            .reply(200, {status: {phase: 'Running'}});
-
         await createJobChannel.sendToQueue(createJobQueue, new Buffer((JSON.stringify({
             taskId: 'abc123',
             job: {id: 'job1', userId: 'user1', taskId: 'task1', isRunning: true, passed: false},
@@ -79,13 +81,19 @@ describe('Orchestration', () => {
 
         await new Promise(resolve => setTimeout(() => resolve(), 1000));
 
+        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
+        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
+        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
+
+        await new Promise(resolve => setTimeout(() => resolve(), 1000));
+
         expect(k8sAPiOne.isDone()).to.eql(true);
         expect(k8sAPiTwo.isDone()).to.eql(true);
         expect(k8sAPiThree.isDone()).to.eql(true);
 
         let messageReceived = false;
 
-        await startTestChannel.consume(qok.queue, (message: ConsumeMessage) => {
+        await startTestChannel.consume(qok.queue, async (message: ConsumeMessage) => {
             const parsed = JSON.parse((message).content.toString());
             expect(parsed).to.eql({start: true});
             messageReceived = true;
