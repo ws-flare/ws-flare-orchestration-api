@@ -3,7 +3,7 @@ import { inject } from '@loopback/core';
 import { Task } from '../models/Task.model';
 import { Job } from '../models/Job.model';
 import ApiRoot = KubernetesClient.ApiRoot;
-import { Connection, ConsumeMessage } from 'amqplib';
+import { Connection } from 'amqplib';
 
 export class KubernetesService {
 
