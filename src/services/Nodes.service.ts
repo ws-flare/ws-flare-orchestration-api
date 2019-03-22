@@ -3,6 +3,7 @@ import { Job } from '../models/Job.model';
 import { Task } from '../models/Task.model';
 import { KubernetesService } from './Kubernetes.service';
 import { Connection } from 'amqplib';
+import { eachLimit } from 'async';
 
 export class NodesService {
 
@@ -24,11 +25,14 @@ export class NodesService {
     }
 
     private async prepareTest(job: Job, task: Task) {
-        const nodes = this.calculateNodesForTest(task.totalSimulatedUsers, this.connectionLimitPerNode);
+        const nodes = NodesService.calculateNodesForTest(task.totalSimulatedUsers, this.connectionLimitPerNode);
 
-        for (let node of nodes) {
-            await this.kubernetesService.startTestPod(job, task, node.totalSimulatedUsers);
-        }
+        await new Promise((resolve) => {
+            eachLimit(nodes, 10, (node, next) => {
+                this.kubernetesService.startTestPod(job, task, node.totalSimulatedUsers)
+                    .then(() => next());
+            }, () => resolve());
+        });
     }
 
     async startTest(job: Job) {
@@ -41,8 +45,8 @@ export class NodesService {
         await startTestExchange.publish(exchange, '', new Buffer((JSON.stringify({start: true}))));
     }
 
-    calculateNodesForTest(totalSimulatedUsers: number,
-                          connectionLimitPerNode: number): { totalSimulatedUsers: number }[] {
+    static calculateNodesForTest(totalSimulatedUsers: number,
+                                 connectionLimitPerNode: number): { totalSimulatedUsers: number }[] {
         let counter = totalSimulatedUsers;
         const nodes: { totalSimulatedUsers: number }[] = [];
 
