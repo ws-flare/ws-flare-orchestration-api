@@ -1,4 +1,4 @@
-import { Channel, ConsumeMessage } from 'amqplib';
+import { Channel, ConsumeMessage, Options } from 'amqplib';
 import { Container, getAMQPConn, setupK8sConfig, startMqContainer } from './test-helpers';
 import * as nock from 'nock';
 import { expect } from 'chai';
@@ -8,13 +8,14 @@ import { main } from '..';
 describe('Orchestration', () => {
 
     const createJobQueue = 'job.create';
-    const startTestQueue = 'job.start.job1';
+    const startTestExchange = 'job.start.job1';
 
     let app: OrchestrationApplication;
     let container: Container;
     let port: number;
     let createJobChannel: Channel;
     let startTestChannel: Channel;
+    let qok: any;
 
     beforeEach(async () => {
         ({container, port} = await startMqContainer());
@@ -27,7 +28,12 @@ describe('Orchestration', () => {
         createJobChannel = await conn.createChannel();
         startTestChannel = await conn.createChannel();
         await createJobChannel.assertQueue(createJobQueue);
-        await startTestChannel.assertQueue(startTestQueue);
+
+        qok = await startTestChannel.assertExchange(startTestExchange, 'fanout', {durable: false});
+
+        await startTestChannel.assertQueue('', {exclusive: true});
+
+        await startTestChannel.bindQueue(qok.queue, startTestExchange, '');
     });
 
     afterEach(async () => {
@@ -74,7 +80,7 @@ describe('Orchestration', () => {
 
         let messageReceived = false;
 
-        await startTestChannel.consume(startTestQueue, (message: ConsumeMessage) => {
+        await startTestChannel.consume(qok.queue, (message: ConsumeMessage) => {
             const parsed = JSON.parse((message).content.toString());
             expect(parsed).to.eql({start: true});
             messageReceived = true;

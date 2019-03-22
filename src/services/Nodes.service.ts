@@ -12,8 +12,8 @@ export class NodesService {
     @inject('services.kubernetes')
     private kubernetesService: KubernetesService;
 
-    @inject('queue.job.start')
-    private startTestQueue: string;
+    @inject('exchange.job.start')
+    private startTestExchange: string;
 
     @inject('amqp.conn')
     private amqpConn: Connection;
@@ -34,12 +34,13 @@ export class NodesService {
     }
 
     async startTest(job: Job) {
-        const queue = `${this.startTestQueue}.${job.id}`;
+        const exchange = `${this.startTestExchange}.${job.id}`;
 
-        const startTestChannel = await this.amqpConn.createChannel();
-        await startTestChannel.assertQueue(queue);
+        const startTestExchange = await this.amqpConn.createChannel();
 
-        await startTestChannel.sendToQueue(queue, new Buffer((JSON.stringify({start: true}))));
+        await startTestExchange.assertExchange(exchange, 'fanout', {durable: false});
+
+        await startTestExchange.publish(exchange, '', new Buffer((JSON.stringify({start: true}))));
     }
 
 }

@@ -41,7 +41,9 @@ export class OrchestrationApplication extends Application {
 
         // Queues
         this.bind('queue.job.create').to('job.create');
-        this.bind('queue.job.start').to('job.start');
+
+        // Exchanges
+        this.bind('exchange.job.start').to('job.start');
 
         // Kubernetes
         this.bind('kubernetes.client').to(new Client1_10({config: config.getInCluster()}));
