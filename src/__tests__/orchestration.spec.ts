@@ -1,4 +1,4 @@
-import { Channel, ConsumeMessage, Options } from 'amqplib';
+import { Channel, ConsumeMessage } from 'amqplib';
 import { Container, getAMQPConn, setupK8sConfig, startMqContainer } from './test-helpers';
 import * as nock from 'nock';
 import { expect } from 'chai';
