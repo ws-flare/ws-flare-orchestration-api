@@ -28,7 +28,7 @@ export class KubernetesService {
     @inject('amqp.pwd')
     amqpPwd: string;
 
-    async startTestPod(job: Job, task: Task) {
+    async startTestPod(job: Job, task: Task, totalSImulatedUsers: number) {
         const id = uuid();
 
         await this.kubernetesClient.api.v1.namespaces('default').pod.post({
@@ -70,7 +70,7 @@ export class KubernetesService {
                                 },
                                 {
                                     name: "TOTAL_SIMULATED_USERS",
-                                    value: `${task.totalSimulatedUsers}`
+                                    value: `${totalSImulatedUsers}`
                                 },
                                 {
                                     name: 'RUN_TIME',

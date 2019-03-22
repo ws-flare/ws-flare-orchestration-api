@@ -54,6 +54,10 @@ describe('Orchestration', () => {
             .intercept(/\/api\/v1\/namespaces\/default\/pods/, 'POST')
             .reply(200, {status: {}});
 
+        const k8sAPiThree = nock('http://localhost:9000')
+            .intercept(/\/api\/v1\/namespaces\/default\/pods/, 'POST')
+            .reply(200, {status: {}});
+
         nock('http://localhost:9000')
             .get(/\/api\/v1\/namespaces\/default\/pods\/.*\/status/)
             .thrice()
@@ -68,7 +72,7 @@ describe('Orchestration', () => {
                 projectId: 'project1',
                 name: 'task1',
                 uri: 'ws://localhost',
-                totalSimulatedUsers: 2000,
+                totalSimulatedUsers: 2067,
                 runTime: 1000
             }
         }))));
@@ -77,6 +81,7 @@ describe('Orchestration', () => {
 
         expect(k8sAPiOne.isDone()).to.eql(true);
         expect(k8sAPiTwo.isDone()).to.eql(true);
+        expect(k8sAPiThree.isDone()).to.eql(true);
 
         let messageReceived = false;
 

@@ -24,12 +24,10 @@ export class NodesService {
     }
 
     private async prepareTest(job: Job, task: Task) {
-        const total = task.totalSimulatedUsers / this.connectionLimitPerNode;
+        const nodes = this.calculateNodesForTest(task.totalSimulatedUsers, this.connectionLimitPerNode);
 
-        console.log('Total is: ' + total);
-
-        for (let i = 0; i < total; i++) {
-            await this.kubernetesService.startTestPod(job, task);
+        for (let node of nodes) {
+            await this.kubernetesService.startTestPod(job, task, node.totalSimulatedUsers);
         }
     }
 
@@ -41,6 +39,28 @@ export class NodesService {
         await startTestExchange.assertExchange(exchange, 'fanout', {durable: false});
 
         await startTestExchange.publish(exchange, '', new Buffer((JSON.stringify({start: true}))));
+    }
+
+    calculateNodesForTest(totalSimulatedUsers: number,
+                          connectionLimitPerNode: number): { totalSimulatedUsers: number }[] {
+        let counter = totalSimulatedUsers;
+        const nodes: { totalSimulatedUsers: number }[] = [];
+
+        if (totalSimulatedUsers < 0) {
+            return [];
+        }
+
+        while (counter !== 0) {
+            if (counter - connectionLimitPerNode > 0) {
+                nodes.push({totalSimulatedUsers: connectionLimitPerNode});
+                counter -= connectionLimitPerNode;
+            } else {
+                nodes.push({totalSimulatedUsers: counter});
+                counter -= counter;
+            }
+        }
+
+        return nodes;
     }
 
 }
