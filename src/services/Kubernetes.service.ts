@@ -111,7 +111,7 @@ export class KubernetesService {
                             ],
                             resources: {
                                 requests: {
-                                    cpu: '100m'
+                                    cpu: '500m'
                                 }
                             }
                         }
