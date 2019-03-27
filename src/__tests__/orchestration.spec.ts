@@ -9,6 +9,7 @@ describe('Orchestration', () => {
 
     const createJobQueue = 'job.create';
     const startTestExchange = 'job.start.job1';
+    const cfMonitorReadyQueue = 'cfMonitor.ready.my-test-node1';
     const nodeReadyQueue = 'node.ready.my-test-node1';
 
     let app: OrchestrationApplication;
@@ -34,6 +35,7 @@ describe('Orchestration', () => {
         nodeReadyChannel = await conn.createChannel();
 
         await createJobChannel.assertQueue(createJobQueue);
+        await nodeReadyChannel.assertQueue(cfMonitorReadyQueue);
         await nodeReadyChannel.assertQueue(nodeReadyQueue);
 
         qok = await startTestChannel.assertExchange(startTestExchange, 'fanout', {durable: false});
@@ -53,6 +55,10 @@ describe('Orchestration', () => {
     });
 
     it('should start a test job', async () => {
+        const k8sCfMonitorStart = nock('http://localhost:9000')
+            .intercept(/\/api\/v1\/namespaces\/default\/pods/, 'POST')
+            .reply(200, {status: {}});
+
         const k8sAPiOne = nock('http://localhost:9000')
             .intercept(/\/api\/v1\/namespaces\/default\/pods/, 'POST')
             .reply(200, {status: {}});
@@ -75,18 +81,29 @@ describe('Orchestration', () => {
                 name: 'task1',
                 uri: 'ws://localhost',
                 totalSimulatedUsers: 2067,
-                runTime: 1000
+                runTime: 1000,
+                cfApi: 'http://cf.com',
+                cfUser: 'user1',
+                cfPass: 'pass1',
+                cfOrg: 'org1',
+                cfSpace: 'space1',
+                cfApps: 'app1,app2,app3'
             }
         }))));
 
         await new Promise(resolve => setTimeout(() => resolve(), 1000));
 
-        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
-        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
-        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
+        await nodeReadyChannel.sendToQueue(cfMonitorReadyQueue, new Buffer((JSON.stringify({ready: true}))));
 
         await new Promise(resolve => setTimeout(() => resolve(), 1000));
 
+        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
+        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
+        await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
+
+        await new Promise(resolve => setTimeout(() => resolve(), 2000));
+
+        expect(k8sCfMonitorStart.isDone()).to.eql(true);
         expect(k8sAPiOne.isDone()).to.eql(true);
         expect(k8sAPiTwo.isDone()).to.eql(true);
         expect(k8sAPiThree.isDone()).to.eql(true);

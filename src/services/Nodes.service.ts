@@ -25,6 +25,10 @@ export class NodesService {
     }
 
     private async prepareTest(job: Job, task: Task) {
+        // Start cloud foundry monitor
+        await this.kubernetesService.startCloudFoundryMonitor(job, task);
+
+        // Calculate and start test clients
         const nodes = NodesService.calculateNodesForTest(task.totalSimulatedUsers, this.connectionLimitPerNode);
 
         await new Promise((resolve) => {

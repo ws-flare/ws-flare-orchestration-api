@@ -1,7 +1,7 @@
 import { ApplicationConfig } from '@loopback/core';
 import { OrchestrationApplication } from './application';
 
-const {PORT, USER_API, PROJECTS_API, JOBS_API, AMQP_URL, AMQP_PORT, AMQP_USER, AMQP_PWD, TEST_IMAGE} = process.env;
+const {PORT, USER_API, PROJECTS_API, JOBS_API, AMQP_URL, AMQP_PORT, AMQP_USER, AMQP_PWD, TEST_IMAGE, CF_MONITOR_IMAGE} = process.env;
 
 export async function main(options: ApplicationConfig = {}): Promise<OrchestrationApplication> {
     options.port = options.port || PORT;
@@ -17,7 +17,8 @@ export async function main(options: ApplicationConfig = {}): Promise<Orchestrati
         pwd: AMQP_PWD
     };
     options.kubernetes = {
-        testImage: TEST_IMAGE
+        testImage: TEST_IMAGE,
+        cfMonitorImage: CF_MONITOR_IMAGE
     };
 
     const app = new OrchestrationApplication(options);

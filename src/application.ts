@@ -17,6 +17,7 @@ export class OrchestrationApplication extends Application {
         // Config
         this.bind('config.nodes.connectionLimitPerNode').to(1000);
         this.bind('config.kubernetes.testImage').to(options.kubernetes.testImage);
+        this.bind('config.kubernetes.cfMonitorImage').to(options.kubernetes.cfMonitorImage);
 
         // Services
         this.bind('services.nodes').toClass(NodesService);
@@ -42,6 +43,7 @@ export class OrchestrationApplication extends Application {
         // Queues
         this.bind('queue.job.create').to('job.create');
         this.bind('queue.node.ready').to('node.ready');
+        this.bind('queue.cfMonitor.ready').to('cfMonitor.ready');
 
         // Exchanges
         this.bind('exchange.job.start').to('job.start');
