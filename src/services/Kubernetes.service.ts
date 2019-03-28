@@ -138,14 +138,14 @@ export class KubernetesService {
                 apiVersion: "v1",
                 metadata: {
                     labels: {
-                        app: "ws-flare-cloudfoundry-monitor-client"
+                        app: "ws-flare-cf-monitor"
                     },
-                    name: `ws-flare-cloudfoundry-monitor-client-${id}`
+                    name: `ws-flare-cf-monitor-${id}`
                 },
                 spec: {
                     containers: [
                         {
-                            name: `ws-flare-cloudfoundry-monitor-client-${id}`,
+                            name: `ws-flare-cf-monitor-${id}`,
                             image: this.cfMonitorImage,
                             ports: [
                                 {
@@ -215,7 +215,7 @@ export class KubernetesService {
                                 },
                                 {
                                     name: "POD_NAME",
-                                    value: `ws-flare-cloudfoundry-monitor-client-${id}`
+                                    value: `ws-flare-cf-monitor-${id}`
                                 }
                             ],
                             resources: {
