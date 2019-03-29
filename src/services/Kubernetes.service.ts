@@ -16,6 +16,9 @@ export class KubernetesService {
     @inject('api.jobs')
     private jobsApi: string;
 
+    @inject('api.monitor')
+    private monitorApi: string;
+
     @inject('kubernetes.client')
     private kubernetesClient: ApiRoot;
 
@@ -80,6 +83,10 @@ export class KubernetesService {
                                 {
                                     name: "JOBS_API",
                                     value: `${this.jobsApi}`
+                                },
+                                {
+                                    name: "MONITOR_API",
+                                    value: `${this.monitorApi}`
                                 },
                                 {
                                     name: "URI",
@@ -168,6 +175,10 @@ export class KubernetesService {
                                 {
                                     name: "JOBS_API",
                                     value: `${this.jobsApi}`
+                                },
+                                {
+                                    name: "MONITOR_API",
+                                    value: `${this.monitorApi}`
                                 },
                                 {
                                     name: 'RUN_TIME',

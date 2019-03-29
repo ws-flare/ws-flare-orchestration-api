@@ -27,6 +27,7 @@ export class OrchestrationApplication extends Application {
         this.bind('api.user').to(options.apis.userApi);
         this.bind('api.projects').to(options.apis.projectsApi);
         this.bind('api.jobs').to(options.apis.jobsApi);
+        this.bind('api.monitor').to(options.apis.monitorApi);
 
         // AMQP
         this.bind('amqp.url').to(options.amqp.url);

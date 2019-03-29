@@ -1,14 +1,15 @@
 import { ApplicationConfig } from '@loopback/core';
 import { OrchestrationApplication } from './application';
 
-const {PORT, USER_API, PROJECTS_API, JOBS_API, AMQP_URL, AMQP_PORT, AMQP_USER, AMQP_PWD, TEST_IMAGE, CF_MONITOR_IMAGE} = process.env;
+const {PORT, USER_API, PROJECTS_API, JOBS_API, MONITOR_API, AMQP_URL, AMQP_PORT, AMQP_USER, AMQP_PWD, TEST_IMAGE, CF_MONITOR_IMAGE} = process.env;
 
 export async function main(options: ApplicationConfig = {}): Promise<OrchestrationApplication> {
     options.port = options.port || PORT;
     options.apis = {
         userApi: USER_API,
         projectsApi: PROJECTS_API,
-        jobsApi: JOBS_API
+        jobsApi: JOBS_API,
+        monitorApi: MONITOR_API
     };
     options.amqp = {
         url: AMQP_URL,
