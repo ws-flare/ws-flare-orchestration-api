@@ -3,13 +3,19 @@ export interface Task {
     projectId: string;
     userId: string;
     name: string;
-    uri: string;
-    totalSimulatedUsers: number;
-    runTime: number;
-    cfApi: string;
-    cfUser: string;
-    cfPass: string;
-    cfOrg: string;
-    cfSpace: string;
-    cfApps: string;
+    script: Script[];
+}
+
+export interface Script {
+    start: number; // Seconds
+    timeout: number; // Seconds
+    totalSimulators: number;
+    target: string;
+    retryLimit: number;
+    payloads?: SocketPayload[];
+}
+
+export interface SocketPayload {
+    start: number; // Seconds
+    payload: any;
 }

@@ -1,6 +1,6 @@
 import { inject } from '@loopback/core';
 import { Job } from '../models/Job.model';
-import { Task } from '../models/Task.model';
+import {Script, Task} from '../models/Task.model';
 import { KubernetesService } from './Kubernetes.service';
 import { Connection } from 'amqplib';
 import { eachLimit } from 'async';
@@ -24,7 +24,7 @@ export class NodesService {
         await this.startTest(job);
     }
 
-    private async prepareTest(job: Job, task: Task) {
+    private async prepareTest(job: Job, script: Script) {
         // Start cloud foundry monitor
         await this.kubernetesService.startCloudFoundryMonitor(job, task);
 

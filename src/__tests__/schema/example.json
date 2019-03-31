@@ -1,0 +1,29 @@
+{
+  "name": "task-1",
+  "scripts": [
+    {
+      "start": 0,
+      "target": "ws://ws.com",
+      "totalSimulators": 500,
+      "timeout": 30
+    },
+    {
+      "start": 15,
+      "target": "ws://ws.com",
+      "totalSimulators": 500,
+      "timeout": 30,
+      "payloads": [
+        {
+          "start": 10,
+          "payload": {
+            "message": "Hello"
+          }
+        }
+      ]
+    }
+  ],
+  "cloudfoundry": {
+    "use": true,
+    "name": "test-instance1"
+  }
+}
