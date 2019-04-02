@@ -1,0 +1,33 @@
+{
+  "name": "task-1",
+  "scripts": [
+    {
+      "start": 0,
+      "target": "ws://ws.com",
+      "totalSimulators": 500,
+      "timeout": 30
+    },
+    {
+      "start": 15,
+      "target": "ws://ws.com",
+      "totalSimulators": 500,
+      "timeout": 30,
+      "payloads": [
+        {
+          "start": 10,
+          "payload": {
+            "message": "Hello"
+          }
+        }
+      ]
+    }
+  ],
+  "cloudfoundry": {
+    "cfApi": "test-instance1",
+    "cfUser": "test",
+    "cfPass": "test",
+    "cfOrg": "thorax",
+    "cfSpace": "dev",
+    "cfApps": "app1,app2,app3"
+  }
+}
