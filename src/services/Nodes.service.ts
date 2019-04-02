@@ -28,7 +28,7 @@ export class NodesService {
     async runTest(job: Job, task: Task) {
         await this.prepareTests(job, task);
 
-        await this.startTest(job);
+        await this.startTest(job, task);
 
         await this.waitForTestsToComplete(job, task);
     }
@@ -53,14 +53,17 @@ export class NodesService {
         });
     }
 
-    async startTest(job: Job) {
+    async startTest(job: Job, task: Task) {
         const exchange = `${this.startTestExchange}.${job.id}`;
 
         const startTestExchange = await this.amqpConn.createChannel();
 
         await startTestExchange.assertExchange(exchange, 'fanout', {durable: false});
 
-        await startTestExchange.publish(exchange, '', new Buffer((JSON.stringify({start: true}))));
+        await startTestExchange.publish(exchange, '', new Buffer((JSON.stringify({
+            start: true,
+            scripts: task.scripts
+        }))));
     }
 
     static calculateNodesForTest(totalSimulatedUsers: number,

@@ -136,7 +136,22 @@ describe('Orchestration', () => {
 
         await startTestChannel.consume(qok.queue, async (message: ConsumeMessage) => {
             const parsed = JSON.parse((message).content.toString());
-            expect(parsed).to.eql({start: true});
+            expect(parsed).to.eql({
+                start: true, scripts: [
+                    {
+                        target: 'ws://localhost',
+                        start: 0,
+                        totalSimulators: 1000,
+                        timeout: 30
+                    },
+                    {
+                        target: 'ws://localhost',
+                        start: 0,
+                        totalSimulators: 1067,
+                        timeout: 30
+                    }
+                ]
+            });
             messageReceived = true;
         }, {noAck: true});
 
