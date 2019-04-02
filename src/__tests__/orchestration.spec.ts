@@ -4,6 +4,7 @@ import * as nock from 'nock';
 import { expect } from 'chai';
 import { OrchestrationApplication } from '../application';
 import { main } from '..';
+import { Task } from '../models/Task.model';
 
 describe('Orchestration', () => {
 
@@ -11,6 +12,8 @@ describe('Orchestration', () => {
     const startTestExchange = 'job.start.job1';
     const cfMonitorReadyQueue = 'cfMonitor.ready.my-test-node1';
     const nodeReadyQueue = 'node.ready.my-test-node1';
+    const nodeCompleteQueue = 'node.complete.job1';
+    const jobCompleteQueue = 'job.complete.job1';
 
     let app: OrchestrationApplication;
     let container: Container;
@@ -18,6 +21,8 @@ describe('Orchestration', () => {
     let createJobChannel: Channel;
     let startTestChannel: Channel;
     let nodeReadyChannel: Channel;
+    let nodeCompleteChannel: Channel;
+    let jobCompleteChannel: Channel;
     let qok: any;
 
     beforeEach(async () => {
@@ -33,10 +38,14 @@ describe('Orchestration', () => {
         createJobChannel = await conn.createChannel();
         startTestChannel = await conn.createChannel();
         nodeReadyChannel = await conn.createChannel();
+        nodeCompleteChannel = await conn.createChannel();
+        jobCompleteChannel = await conn.createChannel();
 
         await createJobChannel.assertQueue(createJobQueue);
         await nodeReadyChannel.assertQueue(cfMonitorReadyQueue);
         await nodeReadyChannel.assertQueue(nodeReadyQueue);
+        await nodeCompleteChannel.assertQueue(nodeCompleteQueue);
+        await jobCompleteChannel.assertQueue(jobCompleteQueue);
 
         qok = await startTestChannel.assertExchange(startTestExchange, 'fanout', {durable: false});
 
@@ -79,16 +88,27 @@ describe('Orchestration', () => {
                 userId: 'user1',
                 projectId: 'project1',
                 name: 'task1',
-                uri: 'ws://localhost',
-                totalSimulatedUsers: 2067,
-                runTime: 1000,
+                scripts: [
+                    {
+                        target: 'ws://localhost',
+                        start: 0,
+                        totalSimulators: 1000,
+                        timeout: 30
+                    },
+                    {
+                        target: 'ws://localhost',
+                        start: 0,
+                        totalSimulators: 1067,
+                        timeout: 30
+                    }
+                ],
                 cfApi: 'http://cf.com',
                 cfUser: 'user1',
                 cfPass: 'pass1',
                 cfOrg: 'org1',
                 cfSpace: 'space1',
                 cfApps: 'app1,app2,app3'
-            }
+            } as Task
         }))));
 
         await new Promise(resolve => setTimeout(() => resolve(), 1000));
@@ -98,10 +118,13 @@ describe('Orchestration', () => {
         await new Promise(resolve => setTimeout(() => resolve(), 1000));
 
         await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
+
+        await new Promise(resolve => setTimeout(() => resolve(), 1000));
+
         await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
         await nodeReadyChannel.sendToQueue(nodeReadyQueue, new Buffer((JSON.stringify({ready: true}))));
 
-        await new Promise(resolve => setTimeout(() => resolve(), 2000));
+        await new Promise(resolve => setTimeout(() => resolve(), 1000));
 
         expect(k8sCfMonitorStart.isDone()).to.eql(true);
         expect(k8sAPiOne.isDone()).to.eql(true);
@@ -109,6 +132,7 @@ describe('Orchestration', () => {
         expect(k8sAPiThree.isDone()).to.eql(true);
 
         let messageReceived = false;
+        let jobCompleted = false;
 
         await startTestChannel.consume(qok.queue, async (message: ConsumeMessage) => {
             const parsed = JSON.parse((message).content.toString());
@@ -116,6 +140,19 @@ describe('Orchestration', () => {
             messageReceived = true;
         }, {noAck: true});
 
+        await jobCompleteChannel.consume(jobCompleteQueue, async (message: ConsumeMessage) => {
+            const parsed = JSON.parse((message).content.toString());
+            expect(parsed).to.eql({done: true});
+            jobCompleted = true;
+        }, {noAck: true});
+
+        await nodeReadyChannel.sendToQueue(nodeCompleteQueue, new Buffer((JSON.stringify({done: true}))));
+        await nodeReadyChannel.sendToQueue(nodeCompleteQueue, new Buffer((JSON.stringify({done: true}))));
+        await nodeReadyChannel.sendToQueue(nodeCompleteQueue, new Buffer((JSON.stringify({done: true}))));
+
+        await new Promise(resolve => setTimeout(() => resolve(), 1000));
+
         expect(messageReceived).to.equal(true);
+        expect(jobCompleted).to.equal(true);
     });
 });

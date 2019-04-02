@@ -23,7 +23,11 @@
     }
   ],
   "cloudfoundry": {
-    "use": true,
-    "name": "test-instance1"
+    "cfApi": "test-instance1",
+    "cfUser": "test",
+    "cfPass": "test",
+    "cfOrg": "thorax",
+    "cfSpace": "dev",
+    "cfApps": "app1,app2,app3"
   }
 }

@@ -43,7 +43,7 @@ export class KubernetesService {
     @inject('queue.cfMonitor.ready')
     private cfMonitorReadyQueue: string;
 
-    async startTestPod(job: Job, task: Task, totalSimulatedUsers: number) {
+    async startTestPod(job: Job, scriptIndex: number) {
         // To enable testing we need this environment variable set in the test
         const id = process.env.NODE_ID || uuid();
 
@@ -69,10 +69,6 @@ export class KubernetesService {
                             ],
                             env: [
                                 {
-                                    name: "TASK_ID",
-                                    value: `${task.id}`
-                                },
-                                {
                                     name: "JOB_ID",
                                     value: `${job.id}`
                                 },
@@ -85,20 +81,8 @@ export class KubernetesService {
                                     value: `${this.jobsApi}`
                                 },
                                 {
-                                    name: "MONITOR_API",
-                                    value: `${this.monitorApi}`
-                                },
-                                {
-                                    name: "URI",
-                                    value: `${task.uri}`
-                                },
-                                {
-                                    name: "TOTAL_SIMULATED_USERS",
-                                    value: `${totalSimulatedUsers}`
-                                },
-                                {
-                                    name: 'RUN_TIME',
-                                    value: `${task.runTime}`
+                                    name: "SCRIPT_INDEX",
+                                    value: `${scriptIndex}`
                                 },
                                 {
                                     name: "AMQP_URL",
@@ -161,10 +145,6 @@ export class KubernetesService {
                             ],
                             env: [
                                 {
-                                    name: "TASK_ID",
-                                    value: `${task.id}`
-                                },
-                                {
                                     name: "JOB_ID",
                                     value: `${job.id}`
                                 },
@@ -179,10 +159,6 @@ export class KubernetesService {
                                 {
                                     name: "MONITOR_API",
                                     value: `${this.monitorApi}`
-                                },
-                                {
-                                    name: 'RUN_TIME',
-                                    value: `${task.runTime}`
                                 },
                                 {
                                     name: "AMQP_URL",

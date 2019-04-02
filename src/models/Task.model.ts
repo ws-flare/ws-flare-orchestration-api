@@ -3,7 +3,13 @@ export interface Task {
     projectId: string;
     userId: string;
     name: string;
-    script: Script[];
+    scripts: Script[];
+    cfApi?: string;
+    cfUser?: string;
+    cfPass?: string;
+    cfOrg?: string;
+    cfSpace?: string;
+    cfApps?: string;
 }
 
 export interface Script {
