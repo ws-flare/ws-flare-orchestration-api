@@ -23,7 +23,8 @@ describe('Orchestration', () => {
     let nodeReadyChannel: Channel;
     let nodeCompleteChannel: Channel;
     let jobCompleteChannel: Channel;
-    let qok: any;
+    let startTestQOk: any;
+    let jobCompleteQOk: any;
 
     beforeEach(async () => {
         ({container, port} = await startMqContainer());
@@ -45,13 +46,15 @@ describe('Orchestration', () => {
         await nodeReadyChannel.assertQueue(cfMonitorReadyQueue);
         await nodeReadyChannel.assertQueue(nodeReadyQueue);
         await nodeCompleteChannel.assertQueue(nodeCompleteQueue);
-        await jobCompleteChannel.assertQueue(jobCompleteQueue);
 
-        qok = await startTestChannel.assertExchange(startTestExchange, 'fanout', {durable: false});
+        startTestQOk = await startTestChannel.assertExchange(startTestExchange, 'fanout', {durable: false});
+        jobCompleteQOk = await jobCompleteChannel.assertExchange(jobCompleteQueue, 'fanout', {durable: false});
 
         await startTestChannel.assertQueue('', {exclusive: true});
+        await jobCompleteChannel.assertQueue('', {exclusive: true});
 
-        await startTestChannel.bindQueue(qok.queue, startTestExchange, '');
+        await startTestChannel.bindQueue(startTestQOk.queue, startTestExchange, '');
+        await jobCompleteChannel.bindQueue(jobCompleteQOk.queue, jobCompleteQueue, '');
     });
 
     afterEach(async () => {
@@ -134,7 +137,7 @@ describe('Orchestration', () => {
         let messageReceived = false;
         let jobCompleted = false;
 
-        await startTestChannel.consume(qok.queue, async (message: ConsumeMessage) => {
+        await startTestChannel.consume(startTestQOk.queue, async (message: ConsumeMessage) => {
             const parsed = JSON.parse((message).content.toString());
             expect(parsed).to.eql({
                 start: true, scripts: [
@@ -155,7 +158,7 @@ describe('Orchestration', () => {
             messageReceived = true;
         }, {noAck: true});
 
-        await jobCompleteChannel.consume(jobCompleteQueue, async (message: ConsumeMessage) => {
+        await jobCompleteChannel.consume(jobCompleteQOk.queue, async (message: ConsumeMessage) => {
             const parsed = JSON.parse((message).content.toString());
             expect(parsed).to.eql({done: true});
             jobCompleted = true;

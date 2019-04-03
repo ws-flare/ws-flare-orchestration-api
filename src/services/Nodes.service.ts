@@ -55,11 +55,8 @@ export class NodesService {
 
     async startTest(job: Job, task: Task) {
         const exchange = `${this.startTestExchange}.${job.id}`;
-
         const startTestExchange = await this.amqpConn.createChannel();
-
         await startTestExchange.assertExchange(exchange, 'fanout', {durable: false});
-
         await startTestExchange.publish(exchange, '', new Buffer((JSON.stringify({
             start: true,
             scripts: task.scripts
@@ -94,14 +91,12 @@ export class NodesService {
 
         console.log(`Waiting for all ${totalNodes.length} nodes to complete`);
 
+        // Wait for all jobs to complete
         const nodeCompleteChannel = await this.amqpConn.createChannel();
-        const jobCompleteChannel = await this.amqpConn.createChannel();
         const queue = `${this.nodeCompleteQueue}.${job.id}`;
-
         await nodeCompleteChannel.assertQueue(queue);
 
         await new Promise(async (resolve) => {
-
             let counter = 0;
 
             await nodeCompleteChannel.consume(queue, () => {
@@ -112,14 +107,15 @@ export class NodesService {
         });
 
         await nodeCompleteChannel.close();
+        console.log('All nodes have completed');
 
+        // Send message that job has completed
         const jobCompleteQueue = `${this.jobCompleteQueue}.${job.id}`;
+        const jobCompleteChannel = await this.amqpConn.createChannel();
+        await jobCompleteChannel.assertExchange(jobCompleteQueue, 'fanout', {durable: false});
+        await jobCompleteChannel.publish(jobCompleteQueue, '', new Buffer((JSON.stringify({done: true}))));
 
-        await jobCompleteChannel.assertQueue(jobCompleteQueue);
-
-        console.log('All nodes have completed')
-
-        await jobCompleteChannel.sendToQueue(jobCompleteQueue, new Buffer((JSON.stringify({done: true}))));
+        await jobCompleteChannel.close();
     }
 
 }
