@@ -47,7 +47,7 @@ export class NodesService {
 
         await new Promise((resolve) => {
             eachLimit(nodes, 10, (node, next) => {
-                this.kubernetesService.startTestPod(job, scriptIndex)
+                this.kubernetesService.startTestPod(job, node.totalSimulatedUsers, scriptIndex)
                     .then(() => next());
             }, () => resolve());
         });

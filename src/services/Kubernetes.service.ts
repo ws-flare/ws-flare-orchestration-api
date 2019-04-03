@@ -43,7 +43,7 @@ export class KubernetesService {
     @inject('queue.cfMonitor.ready')
     private cfMonitorReadyQueue: string;
 
-    async startTestPod(job: Job, scriptIndex: number) {
+    async startTestPod(job: Job, totalSimulators: number, scriptIndex: number) {
         // To enable testing we need this environment variable set in the test
         const id = process.env.NODE_ID || uuid();
 
@@ -79,6 +79,10 @@ export class KubernetesService {
                                 {
                                     name: "JOBS_API",
                                     value: `${this.jobsApi}`
+                                },
+                                {
+                                    name: 'TOTAL_SIMULATORS',
+                                    value: `${totalSimulators}`
                                 },
                                 {
                                     name: "SCRIPT_INDEX",
