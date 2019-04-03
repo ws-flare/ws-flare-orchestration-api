@@ -29,7 +29,10 @@ export class Server extends Context implements Server {
         await createJobChannel.assertQueue(this.createJobQueue);
 
         await createJobChannel.consume(this.createJobQueue, async (message: ConsumeMessage) => {
+            console.log('New job has been created');
             const parsed = JSON.parse((message).content.toString());
+
+            console.log(parsed);
 
             await this.nodesService.runTest(parsed.job, parsed.task);
         }, {noAck: true});
