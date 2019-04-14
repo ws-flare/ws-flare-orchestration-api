@@ -80,6 +80,7 @@
     "@types/uuid": "^3.4.4",
     "async": "^2.6.2",
     "chai": "^4.2.0",
+    "coveralls": "^3.0.3",
     "cross-env": "^5.2.0",
     "isomorphic-fetch": "^2.2.1",
     "mock-fs": "^4.8.0",
