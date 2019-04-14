@@ -10,6 +10,9 @@ script:
   - yarn test
   - yarn build
   - docker build -t wsflare/ws-flare-orchestration-api:$TRAVIS_BUILD_NUMBER .
+
+after_success: yarn coverage
+
 deploy:
   - provider: script
     script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" && docker push wsflare/ws-flare-orchestration-api

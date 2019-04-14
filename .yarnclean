@@ -43,3 +43,5 @@ wercker.yml
 
 # misc
 *.md
+
+!nyc/node_modules/istanbul-reports/lib/html/assets

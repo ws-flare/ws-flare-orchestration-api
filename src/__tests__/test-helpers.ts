@@ -95,3 +95,7 @@ export function setupK8sConfig() {
         }
     });
 }
+
+export function restoreFS() {
+    mock.restore()
+}

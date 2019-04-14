@@ -1,5 +1,5 @@
 import { Channel, ConsumeMessage } from 'amqplib';
-import { Container, getAMQPConn, setupK8sConfig, startMqContainer } from './test-helpers';
+import { Container, getAMQPConn, restoreFS, setupK8sConfig, startMqContainer } from './test-helpers';
 import * as nock from 'nock';
 import { expect } from 'chai';
 import { OrchestrationApplication } from '../application';
@@ -64,6 +64,7 @@ describe('Orchestration', () => {
         nock.cleanAll();
         nock.restore();
         nock.activate();
+        restoreFS();
     });
 
     it('should start a test job', async () => {
