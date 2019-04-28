@@ -1,9 +1,12 @@
-import { Client1_10, config } from 'kubernetes-client';
-import { Application, ApplicationConfig } from '@loopback/core';
-import { connect } from 'amqplib';
-import { Server } from './server';
-import { NodesService } from './services/Nodes.service';
-import { KubernetesService } from './services/Kubernetes.service';
+import {Client1_10, config} from 'kubernetes-client';
+import {Application, ApplicationConfig} from '@loopback/core';
+import {connect} from 'amqplib';
+import {Server} from './server';
+import {NodesService} from './services/Nodes.service';
+import {KubernetesService} from './services/Kubernetes.service';
+import {ResultsService} from './services/results.service';
+import {JobsService} from './services/jobs.service';
+import {createLogger, transports} from 'winston';
 
 export class OrchestrationApplication extends Application {
 
@@ -14,6 +17,15 @@ export class OrchestrationApplication extends Application {
 
         this.server(Server);
 
+        const logger = createLogger({
+            transports: [
+                new transports.Console(),
+            ],
+        });
+
+        // Logger
+        this.bind('logger').to(logger);
+
         // Config
         this.bind('config.nodes.connectionLimitPerNode').to(1000);
         this.bind('config.kubernetes.testImage').to(options.kubernetes.testImage);
@@ -22,6 +34,8 @@ export class OrchestrationApplication extends Application {
         // Services
         this.bind('services.nodes').toClass(NodesService);
         this.bind('services.kubernetes').toClass(KubernetesService);
+        this.bind('services.results').toClass(ResultsService);
+        this.bind('services.jobs').toClass(JobsService);
 
         // Remote APIS
         this.bind('api.user').to(options.apis.userApi);

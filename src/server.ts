@@ -1,10 +1,14 @@
-import { Application, CoreBindings } from '@loopback/core';
-import { Context, inject } from '@loopback/context';
-import { Connection, ConsumeMessage } from 'amqplib';
-import { NodesService } from './services/Nodes.service';
+import {Application, CoreBindings} from '@loopback/core';
+import {Context, inject} from '@loopback/context';
+import {Connection, ConsumeMessage} from 'amqplib';
+import {NodesService} from './services/Nodes.service';
+import {Logger} from 'winston';
 
 export class Server extends Context implements Server {
     private _listening: boolean = false;
+
+    @inject('logger')
+    private logger: Logger;
 
     @inject('amqp.conn')
     private amqpConn: Connection;
@@ -29,10 +33,10 @@ export class Server extends Context implements Server {
         await createJobChannel.assertQueue(this.createJobQueue);
 
         await createJobChannel.consume(this.createJobQueue, async (message: ConsumeMessage) => {
-            console.log('New job has been created');
+            this.logger.info('New job has been created');
             const parsed = JSON.parse((message).content.toString());
 
-            console.log(parsed);
+            this.logger.info(parsed);
 
             await this.nodesService.runTest(parsed.job, parsed.task);
         }, {noAck: true});

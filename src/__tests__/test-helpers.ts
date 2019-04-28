@@ -79,6 +79,13 @@ export function setupK8sConfig() {
             '_stream_duplex.js': readFileSync('./node_modules/readable-stream/lib/_stream_duplex.js'),
             '_stream_readable.js': readFileSync('./node_modules/readable-stream/lib/_stream_readable.js')
         },
+        'node_modules/readable-stream/node_modules': {},
+        'node_modules/readable-stream/node_modules/isarray': {
+            'index.js': readFileSync('./node_modules/readable-stream/node_modules/isarray/index.js')
+        },
+        'node_modules/readable-stream/lib/internal/streams': {
+            'BufferList.js': readFileSync('node_modules/readable-stream/lib/internal/streams/BufferList.js')
+        },
         'node_modules/for-own': {
             'index.js': readFileSync('./node_modules/for-own/index.js')
         },

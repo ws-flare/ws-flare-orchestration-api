@@ -10,6 +10,7 @@ export interface Task {
     cfOrg?: string;
     cfSpace?: string;
     cfApps?: string;
+    successThreshold: number;
 }
 
 export interface Script {

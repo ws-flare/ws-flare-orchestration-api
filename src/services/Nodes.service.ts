@@ -1,11 +1,16 @@
-import { inject } from '@loopback/core';
-import { Job } from '../models/Job.model';
-import { Script, Task } from '../models/Task.model';
-import { KubernetesService } from './Kubernetes.service';
-import { Connection } from 'amqplib';
-import { eachLimit } from 'async';
+import {inject} from '@loopback/core';
+import {Job} from '../models/Job.model';
+import {Script, Task} from '../models/Task.model';
+import {KubernetesService} from './Kubernetes.service';
+import {Connection} from 'amqplib';
+import {eachLimit} from 'async';
+import {ResultsService} from './results.service';
+import {Logger} from 'winston';
 
 export class NodesService {
+
+    @inject('logger')
+    private logger: Logger;
 
     @inject('config.nodes.connectionLimitPerNode')
     private connectionLimitPerNode: number;
@@ -24,6 +29,9 @@ export class NodesService {
 
     @inject('amqp.conn')
     private amqpConn: Connection;
+
+    @inject('services.results')
+    private resultsService: ResultsService;
 
     async runTest(job: Job, task: Task) {
         await this.prepareTests(job, task);
@@ -89,31 +97,33 @@ export class NodesService {
         const totalSimulators = task.scripts.reduce((total, script) => total + script.totalSimulators, 0);
         const totalNodes = NodesService.calculateNodesForTest(totalSimulators, this.connectionLimitPerNode);
 
-        console.log(`Waiting for all ${totalNodes.length} nodes to complete`);
+        this.logger.info(`Waiting for all ${totalNodes.length} nodes to complete`);
 
         // Wait for all jobs to complete
         const nodeCompleteChannel = await this.amqpConn.createChannel();
         const queue = `${this.nodeCompleteQueue}.${job.id}`;
         await nodeCompleteChannel.assertQueue(queue);
 
-        await new Promise(async (resolve) => {
+        await new Promise((resolve) => {
             let counter = 0;
 
-            await nodeCompleteChannel.consume(queue, () => {
+            nodeCompleteChannel.consume(queue, () => {
                 counter === totalNodes.length - 1 ? resolve() : counter++;
 
-                console.log(`${counter} nodes have completed`);
+                this.logger.info(`${counter} nodes have completed`);
             }, {noAck: true});
         });
 
         await nodeCompleteChannel.close();
-        console.log('All nodes have completed');
+        this.logger.info('All nodes have completed');
+
+        const passed = await this.resultsService.calculateResults(task, job);
 
         // Send message that job has completed
         const jobCompleteQueue = `${this.jobCompleteQueue}.${job.id}`;
         const jobCompleteChannel = await this.amqpConn.createChannel();
         await jobCompleteChannel.assertExchange(jobCompleteQueue, 'fanout', {durable: false});
-        await jobCompleteChannel.publish(jobCompleteQueue, '', new Buffer((JSON.stringify({done: true}))));
+        await jobCompleteChannel.publish(jobCompleteQueue, '', new Buffer((JSON.stringify({done: true, passed}))));
 
         await jobCompleteChannel.close();
     }
