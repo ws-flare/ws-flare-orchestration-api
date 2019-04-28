@@ -33,7 +33,7 @@ export class ResultsService {
 
         const passed = totalSuccessfulConnections >= threshold;
 
-        await this.jobsService.updateJob({...job, passed});
+        await this.jobsService.updateJob({...job, passed, isRunning: false});
 
         return passed;
     }
