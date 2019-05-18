@@ -1,3 +1,6 @@
+/**
+ * Model which describes the attributes of a Job
+ */
 export interface Job {
     id: string;
     createdAt: string;

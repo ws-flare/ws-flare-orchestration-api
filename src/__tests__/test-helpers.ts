@@ -18,6 +18,9 @@ export const apis = {
     jobsApi: 'http://jobs.com'
 };
 
+/**
+ * Start a new rabbitMQ docker container for use in the test
+ */
 export async function startMqContainer(): Promise<{ container: Container, port: number }> {
     const docker = new Docker({socketPath: '/var/run/docker.sock'});
     const port = await getRandomPort();
@@ -56,6 +59,11 @@ export async function startMqContainer(): Promise<{ container: Container, port: 
     return {container, port};
 }
 
+/**
+ * Create a connection to the rabbitMQ server
+ *
+ * @param port - The port rabbitMQ is running on
+ */
 export async function getAMQPConn(port: number): Promise<Connection> {
     const AMQP_URL = 'localhost';
     const AMQP_USER = 'guest';
@@ -68,6 +76,9 @@ export async function getAMQPConn(port: number): Promise<Connection> {
     return connect({hostname: AMQP_URL, port, username: AMQP_USER, password: AMQP_PWD});
 }
 
+/**
+ * Needed to mock the file system for the duration of the test
+ */
 export function setupK8sConfig() {
     mock({
         '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt': 'my-ca',
@@ -103,6 +114,9 @@ export function setupK8sConfig() {
     });
 }
 
+/**
+ * Restore the file system
+ */
 export function restoreFS() {
     mock.restore()
 }

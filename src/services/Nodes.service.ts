@@ -7,6 +7,9 @@ import {eachLimit} from 'async';
 import {ResultsService} from './results.service';
 import {Logger} from 'winston';
 
+/**
+ * Service for handling the orchestration of tests
+ */
 export class NodesService {
 
     @inject('logger')
@@ -33,26 +36,52 @@ export class NodesService {
     @inject('services.results')
     private resultsService: ResultsService;
 
+    /**
+     * Runs a new test to simulate web sockets
+     *
+     * @param job - The job
+     * @param task - The task
+     */
     async runTest(job: Job, task: Task) {
+        // Set up tests
         await this.prepareTests(job, task);
 
+        // Start tests
         await this.startTest(job, task);
 
+        // Wait for tests to complete
         await this.waitForTestsToComplete(job, task);
     }
 
+
+    /**
+     * Start a new cloud foundry monitor pod and prepare tests
+     *
+     * @param job - The job
+     * @param task - The task
+     */
     private async prepareTests(job: Job, task: Task) {
+        // Wait for cloud foundry monitor to start
         await this.kubernetesService.startCloudFoundryMonitor(job, task);
 
+        // Prepare tests
         for (let i = 0; i < task.scripts.length; i++) {
             await this.prepareTest(job, task.scripts[i], i);
         }
     }
 
+    /**
+     * Calculate how many kubernetes pods are needed to start the test then start the test
+     *
+     * @param job - The job
+     * @param script - The script
+     * @param scriptIndex - The script index
+     */
     private async prepareTest(job: Job, script: Script, scriptIndex: number) {
         // Calculate and start test clients
         const nodes = NodesService.calculateNodesForTest(script.totalSimulators, this.connectionLimitPerNode);
 
+        // Start test pods 10 at a time
         await new Promise((resolve) => {
             eachLimit(nodes, 10, (node, next) => {
                 this.kubernetesService.startTestPod(job, node.totalSimulatedUsers, scriptIndex)
@@ -61,6 +90,13 @@ export class NodesService {
         });
     }
 
+    /**
+     * After each pod has been creates, send out a message on rabbitMQ to start the tests. Each pod will be listening
+     * on the queue and will start when the message is received
+     *
+     * @param job - The job
+     * @param task - The task
+     */
     async startTest(job: Job, task: Task) {
         const exchange = `${this.startTestExchange}.${job.id}`;
         const startTestExchange = await this.amqpConn.createChannel();
@@ -71,6 +107,12 @@ export class NodesService {
         }))));
     }
 
+    /**
+     * Calculates how many kubernetes pods are needed to achieve the required simulation load
+     *
+     * @param totalSimulatedUsers - The total amount to simulate
+     * @param connectionLimitPerNode - The connection limit of each pod
+     */
     static calculateNodesForTest(totalSimulatedUsers: number,
                                  connectionLimitPerNode: number): { totalSimulatedUsers: number }[] {
         let counter = totalSimulatedUsers;
@@ -93,6 +135,12 @@ export class NodesService {
         return nodes;
     }
 
+    /**
+     * Waits for all tests to complete
+     *
+     * @param job - The job
+     * @param task - The task
+     */
     private async waitForTestsToComplete(job: Job, task: Task) {
         const totalSimulators = task.scripts.reduce((total, script) => total + script.totalSimulators, 0);
         const totalNodes = NodesService.calculateNodesForTest(totalSimulators, this.connectionLimitPerNode);

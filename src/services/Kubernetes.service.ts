@@ -5,6 +5,9 @@ import { Job } from '../models/Job.model';
 import { Connection } from 'amqplib';
 import ApiRoot = KubernetesClient.ApiRoot;
 
+/**
+ * Handles communication to the kubernetes API
+ */
 export class KubernetesService {
 
     @inject('config.kubernetes.testImage')
@@ -43,6 +46,13 @@ export class KubernetesService {
     @inject('queue.cfMonitor.ready')
     private cfMonitorReadyQueue: string;
 
+    /**
+     * Instructs the kubernetes API to create a new pod to simulate web socket connections
+     *
+     * @param job - The job to start
+     * @param totalSimulators - Total number of web sockets to simulate
+     * @param scriptIndex - The script index from the script array defined when creating a task
+     */
     async startTestPod(job: Job, totalSimulators: number, scriptIndex: number) {
         // To enable testing we need this environment variable set in the test
         const id = process.env.NODE_ID || uuid();
@@ -123,6 +133,12 @@ export class KubernetesService {
         await this.waitForPodToStart(id);
     }
 
+    /**
+     * Instructs kubernetes to create a new cloud foundry monitoring pod for the duration of the test
+     *
+     * @param job - The job
+     * @param task - The task
+     */
     async startCloudFoundryMonitor(job: Job, task: Task) {
         // To enable testing we need this environment variable set in the test
         const id = process.env.NODE_ID || uuid();
@@ -220,9 +236,15 @@ export class KubernetesService {
             }
         });
 
+        // Wait for the monitor to start
         await this.waitForCfMonitorToStart(id);
     }
 
+    /**
+     * Waits for a test pod to start
+     *
+     * @param nodeId - The id of the pod
+     */
     private async waitForPodToStart(nodeId: string) {
         const nodeReadyChannel = await this.amqpConn.createChannel();
         const queue = `${this.nodeReadyQueue}.${nodeId}`;
@@ -230,12 +252,19 @@ export class KubernetesService {
         await nodeReadyChannel.assertQueue(queue);
 
         await new Promise(async (resolve) => {
+
+            // Listen to rabbitMQ topic for pod to start
             await nodeReadyChannel.consume(queue, () => {
                 nodeReadyChannel.close().then(() => resolve());
             }, {noAck: true});
         });
     }
 
+    /**
+     * Waits for cloud foundry monitor pod to start
+     *
+     * @param cfMonitorId - The id of the pod
+     */
     private async waitForCfMonitorToStart(cfMonitorId: string) {
         const nodeReadyChannel = await this.amqpConn.createChannel();
 
@@ -244,6 +273,7 @@ export class KubernetesService {
         await nodeReadyChannel.assertQueue(queue);
 
         await new Promise(async (resolve) => {
+            // Listen to rabbitMQ topic for pod to start
             await nodeReadyChannel.consume(queue, () => {
                 nodeReadyChannel.close().then(() => resolve());
             }, {noAck: true});

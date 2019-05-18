@@ -8,6 +8,9 @@ import {ResultsService} from './services/results.service';
 import {JobsService} from './services/jobs.service';
 import {createLogger, transports} from 'winston';
 
+/**
+ * Bootstraps the loopback application and sets up dependency injection
+ */
 export class OrchestrationApplication extends Application {
 
     constructor(options: ApplicationConfig = {}) {

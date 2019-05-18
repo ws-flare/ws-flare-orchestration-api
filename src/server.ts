@@ -4,6 +4,9 @@ import {Connection, ConsumeMessage} from 'amqplib';
 import {NodesService} from './services/Nodes.service';
 import {Logger} from 'winston';
 
+/**
+ * Starts the server
+ */
 export class Server extends Context implements Server {
     private _listening: boolean = false;
 
@@ -27,11 +30,15 @@ export class Server extends Context implements Server {
         return this._listening;
     }
 
+    /**
+     * Listens for new jobs to be requested
+     */
     async start(): Promise<void> {
         const createJobChannel = await this.amqpConn.createChannel();
 
         await createJobChannel.assertQueue(this.createJobQueue);
 
+        // Waits for new jobs to be requests
         await createJobChannel.consume(this.createJobQueue, async (message: ConsumeMessage) => {
             this.logger.info('New job has been created');
             const parsed = JSON.parse((message).content.toString());
@@ -42,6 +49,9 @@ export class Server extends Context implements Server {
         }, {noAck: true});
     }
 
+    /**
+     * Shutdown the server
+     */
     async stop(): Promise<void> {
         await this.amqpConn.close();
     }

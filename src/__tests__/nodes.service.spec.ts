@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 import { NodesService } from '../services/Nodes.service';
 
+/**
+ * Tests for nodes.service
+ */
 describe('Nodes Service', () => {
 
     it('should calculate correct amount of nodes to use', () => {

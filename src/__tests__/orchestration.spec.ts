@@ -6,6 +6,9 @@ import {OrchestrationApplication} from '../application';
 import {main} from '..';
 import {Task} from '../models/Task.model';
 
+/**
+ * Tests for orchestration related functionality
+ */
 describe('Orchestration', () => {
 
     const createJobQueue = 'job.create';

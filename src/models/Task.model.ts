@@ -1,3 +1,6 @@
+/**
+ * Model which describes the attributes of a Task
+ */
 export interface Task {
     id: string;
     projectId: string;
@@ -13,6 +16,9 @@ export interface Task {
     successThreshold: number;
 }
 
+/**
+ * Model which describes the attributes of a Script
+ */
 export interface Script {
     start: number; // Seconds
     timeout: number; // Seconds
@@ -22,6 +28,9 @@ export interface Script {
     payloads?: SocketPayload[];
 }
 
+/**
+ * Model which describes the attributes of a socket
+ */
 export interface SocketPayload {
     start: number; // Seconds
     payload: any;
